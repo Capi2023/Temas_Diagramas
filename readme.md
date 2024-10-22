@@ -10,8 +10,8 @@ Este proyecto es una aplicación de escritorio en Python que permite generar dif
 - Gráfico de Control
 
 ## Instalación
-git clone https://github.com/tu_usuario/tu_proyecto.git
-cd tu_proyecto
-python -m venv myvenv
-source myvenv/bin/activate  # En Windows: myvenv\Scripts\activate
-pip install -r requirements.txt
+### git clone https://github.com/Capi2023/Temas_Diagramas.git
+### cd tu_proyecto
+### python -m venv myvenv
+### myvenv\Scripts\activate
+### pip install -r requirements.txt
