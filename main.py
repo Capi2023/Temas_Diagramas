@@ -24,11 +24,21 @@ class App:
         self.control_input_frame_visible = False
         self.ishikawa_frame_visible = False
         self.verification_frame_visible = False
+        self.bar_csv_categories = None
+        self.bar_csv_values = None
+        self.pie_csv_labels = None
+        self.pie_csv_values = None
+        self.scatter_csv_x_values = None
+        self.scatter_csv_y_values = None
+        self.pareto_csv_categories = None
+        self.pareto_csv_values = None
+        self.control_csv_data = None
 
         # Crear el área de botones y el área de gráficos
         self.create_widgets()
 
 
+#Crear los widgets y botones
     def create_widgets(self):
         # Frame para los botones y entradas
         self.left_frame = ttk.Frame(self.main_frame)
@@ -115,6 +125,7 @@ class App:
         self.setup_control_chart_inputs()
 
 
+# Esconder los inputs
     def hide_all_input_frames(self):
         if self.hist_input_frame_visible:
             self.input_frame.pack_forget()
@@ -142,6 +153,7 @@ class App:
             self.verification_frame_visible = False
 
 
+# Limpiar los inputs
     def clear_canvas(self):
         # Si ya existe un lienzo, eliminarlo
         if self.canvas is not None:
@@ -150,6 +162,7 @@ class App:
             self.fig = None
 
 
+# El setup de los inputs
     def setup_histogram_inputs(self):
         # Campos de entrada para el histograma
 
@@ -192,141 +205,187 @@ class App:
 
 
     def setup_bar_chart_inputs(self):
+        # Añadir opción para seleccionar la fuente de datos
+        ttk.Label(self.bar_input_frame, text="Fuente de Datos:").pack(anchor='w', pady=2)
+        self.bar_data_source = ttk.Combobox(self.bar_input_frame, values=["Entrada Manual", "Archivo CSV"], state="readonly")
+        self.bar_data_source.current(0)  # Seleccionar "Entrada Manual" por defecto
+        self.bar_data_source.pack(fill=tk.X, pady=2)
+        self.bar_data_source.bind("<<ComboboxSelected>>", self.toggle_bar_data_entry)  # Vincular evento de selección
+
         # Campos de entrada para el gráfico de barras
-        self.bar_title_entry = ttk.Entry(self.bar_input_frame, width=30)
-        self.bar_x_label_entry = ttk.Entry(self.bar_input_frame, width=30)
-        self.bar_y_label_entry = ttk.Entry(self.bar_input_frame, width=30)
         self.bar_categories_entry = ttk.Entry(self.bar_input_frame, width=30)
         self.bar_values_entry = ttk.Entry(self.bar_input_frame, width=30)
 
-        # Botón para generar el gráfico de barras
-        self.generate_bar_chart_button = ttk.Button(self.bar_input_frame, text="Generar Gráfico de Barras", command=self.show_bar_chart)
+        # Botón para cargar archivo CSV
+        self.bar_load_csv_button = ttk.Button(self.bar_input_frame, text="Cargar Archivo CSV", command=self.load_bar_csv)
 
-        # Etiquetas y campos de entrada
+        # Resto de los campos
         ttk.Label(self.bar_input_frame, text="Título del Gráfico de Barras:").pack(anchor='w', pady=2)
+        self.bar_title_entry = ttk.Entry(self.bar_input_frame, width=30)
         self.bar_title_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.bar_input_frame, text="Etiqueta del Eje X:").pack(anchor='w', pady=2)
+        self.bar_x_label_entry = ttk.Entry(self.bar_input_frame, width=30)
         self.bar_x_label_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.bar_input_frame, text="Etiqueta del Eje Y:").pack(anchor='w', pady=2)
+        self.bar_y_label_entry = ttk.Entry(self.bar_input_frame, width=30)
         self.bar_y_label_entry.pack(fill=tk.X, pady=2)
 
+        # Botón para generar el gráfico de barras
+        self.generate_bar_chart_button = ttk.Button(self.bar_input_frame, text="Generar Gráfico de Barras", command=self.show_bar_chart)
+        self.generate_bar_chart_button.pack(pady=10)
+
+        # Inicialmente mostramos los campos de entrada manual
         ttk.Label(self.bar_input_frame, text="Categorías (separadas por comas):").pack(anchor='w', pady=2)
         self.bar_categories_entry.pack(fill=tk.X, pady=2)
-
         ttk.Label(self.bar_input_frame, text="Valores (separados por comas):").pack(anchor='w', pady=2)
         self.bar_values_entry.pack(fill=tk.X, pady=2)
 
-        self.generate_bar_chart_button.pack(pady=10)
-
 
     def setup_pie_chart_inputs(self):
+        # Añadir opción para seleccionar la fuente de datos
+        ttk.Label(self.pie_input_frame, text="Fuente de Datos:").pack(anchor='w', pady=2)
+        self.pie_data_source = ttk.Combobox(self.pie_input_frame, values=["Entrada Manual", "Archivo CSV"], state="readonly")
+        self.pie_data_source.current(0)
+        self.pie_data_source.pack(fill=tk.X, pady=2)
+        self.pie_data_source.bind("<<ComboboxSelected>>", self.toggle_pie_data_entry)
+
         # Campos de entrada para el gráfico de pastel
-        self.pie_title_entry = ttk.Entry(self.pie_input_frame, width=30)
         self.pie_labels_entry = ttk.Entry(self.pie_input_frame, width=30)
         self.pie_values_entry = ttk.Entry(self.pie_input_frame, width=30)
 
-        # Botón para generar el gráfico de pastel
-        self.generate_pie_chart_button = ttk.Button(self.pie_input_frame, text="Generar Gráfico de Pastel", command=self.show_pie_chart)
+        # Botón para cargar archivo CSV
+        self.pie_load_csv_button = ttk.Button(self.pie_input_frame, text="Cargar Archivo CSV", command=self.load_pie_csv)
 
-        # Etiquetas y campos de entrada
+        # Resto de los campos
         ttk.Label(self.pie_input_frame, text="Título del Gráfico de Pastel:").pack(anchor='w', pady=2)
+        self.pie_title_entry = ttk.Entry(self.pie_input_frame, width=30)
         self.pie_title_entry.pack(fill=tk.X, pady=2)
 
+        # Botón para generar el gráfico de pastel
+        self.generate_pie_chart_button = ttk.Button(self.pie_input_frame, text="Generar Gráfico de Pastel", command=self.show_pie_chart)
+        self.generate_pie_chart_button.pack(pady=10)
+
+        # Inicialmente mostramos los campos de entrada manual
         ttk.Label(self.pie_input_frame, text="Etiquetas (separadas por comas):").pack(anchor='w', pady=2)
         self.pie_labels_entry.pack(fill=tk.X, pady=2)
-
         ttk.Label(self.pie_input_frame, text="Valores (separados por comas):").pack(anchor='w', pady=2)
         self.pie_values_entry.pack(fill=tk.X, pady=2)
 
-        self.generate_pie_chart_button.pack(pady=10)
-
 
     def setup_scatter_plot_inputs(self):
+        # Añadir opción para seleccionar la fuente de datos
+        ttk.Label(self.scatter_input_frame, text="Fuente de Datos:").pack(anchor='w', pady=2)
+        self.scatter_data_source = ttk.Combobox(self.scatter_input_frame, values=["Entrada Manual", "Archivo CSV"], state="readonly")
+        self.scatter_data_source.current(0)
+        self.scatter_data_source.pack(fill=tk.X, pady=2)
+        self.scatter_data_source.bind("<<ComboboxSelected>>", self.toggle_scatter_data_entry)
+
         # Campos de entrada para el diagrama de dispersión
-        self.scatter_title_entry = ttk.Entry(self.scatter_input_frame, width=30)
-        self.scatter_x_label_entry = ttk.Entry(self.scatter_input_frame, width=30)
-        self.scatter_y_label_entry = ttk.Entry(self.scatter_input_frame, width=30)
         self.scatter_x_values_entry = ttk.Entry(self.scatter_input_frame, width=30)
         self.scatter_y_values_entry = ttk.Entry(self.scatter_input_frame, width=30)
 
-        # Botón para generar el diagrama de dispersión
-        self.generate_scatter_plot_button = ttk.Button(self.scatter_input_frame, text="Generar Diagrama de Dispersión", command=self.show_scatter_plot)
+        # Botón para cargar archivo CSV
+        self.scatter_load_csv_button = ttk.Button(self.scatter_input_frame, text="Cargar Archivo CSV", command=self.load_scatter_csv)
 
-        # Etiquetas y campos de entrada
+        # Resto de los campos
         ttk.Label(self.scatter_input_frame, text="Título del Diagrama de Dispersión:").pack(anchor='w', pady=2)
+        self.scatter_title_entry = ttk.Entry(self.scatter_input_frame, width=30)
         self.scatter_title_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.scatter_input_frame, text="Etiqueta del Eje X:").pack(anchor='w', pady=2)
+        self.scatter_x_label_entry = ttk.Entry(self.scatter_input_frame, width=30)
         self.scatter_x_label_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.scatter_input_frame, text="Etiqueta del Eje Y:").pack(anchor='w', pady=2)
+        self.scatter_y_label_entry = ttk.Entry(self.scatter_input_frame, width=30)
         self.scatter_y_label_entry.pack(fill=tk.X, pady=2)
 
+        # Botón para generar el diagrama de dispersión
+        self.generate_scatter_plot_button = ttk.Button(self.scatter_input_frame, text="Generar Diagrama de Dispersión", command=self.show_scatter_plot)
+        self.generate_scatter_plot_button.pack(pady=10)
+
+        # Inicialmente mostramos los campos de entrada manual
         ttk.Label(self.scatter_input_frame, text="Valores de X (separados por comas):").pack(anchor='w', pady=2)
         self.scatter_x_values_entry.pack(fill=tk.X, pady=2)
-
         ttk.Label(self.scatter_input_frame, text="Valores de Y (separados por comas):").pack(anchor='w', pady=2)
         self.scatter_y_values_entry.pack(fill=tk.X, pady=2)
 
-        self.generate_scatter_plot_button.pack(pady=10)
-
 
     def setup_pareto_chart_inputs(self):
+        # Añadir opción para seleccionar la fuente de datos
+        ttk.Label(self.pareto_input_frame, text="Fuente de Datos:").pack(anchor='w', pady=2)
+        self.pareto_data_source = ttk.Combobox(self.pareto_input_frame, values=["Entrada Manual", "Archivo CSV"], state="readonly")
+        self.pareto_data_source.current(0)
+        self.pareto_data_source.pack(fill=tk.X, pady=2)
+        self.pareto_data_source.bind("<<ComboboxSelected>>", self.toggle_pareto_data_entry)
+
         # Campos de entrada para el diagrama de Pareto
-        self.pareto_title_entry = ttk.Entry(self.pareto_input_frame, width=30)
-        self.pareto_x_label_entry = ttk.Entry(self.pareto_input_frame, width=30)
-        self.pareto_y_label_entry = ttk.Entry(self.pareto_input_frame, width=30)
         self.pareto_categories_entry = ttk.Entry(self.pareto_input_frame, width=30)
         self.pareto_values_entry = ttk.Entry(self.pareto_input_frame, width=30)
 
-        # Botón para generar el diagrama de Pareto
-        self.generate_pareto_chart_button = ttk.Button(self.pareto_input_frame, text="Generar Diagrama de Pareto", command=self.show_pareto_chart)
+        # Botón para cargar archivo CSV
+        self.pareto_load_csv_button = ttk.Button(self.pareto_input_frame, text="Cargar Archivo CSV", command=self.load_pareto_csv)
 
-        # Etiquetas y campos de entrada
+        # Resto de los campos
         ttk.Label(self.pareto_input_frame, text="Título del Diagrama de Pareto:").pack(anchor='w', pady=2)
+        self.pareto_title_entry = ttk.Entry(self.pareto_input_frame, width=30)
         self.pareto_title_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.pareto_input_frame, text="Etiqueta del Eje X:").pack(anchor='w', pady=2)
+        self.pareto_x_label_entry = ttk.Entry(self.pareto_input_frame, width=30)
         self.pareto_x_label_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.pareto_input_frame, text="Etiqueta del Eje Y:").pack(anchor='w', pady=2)
+        self.pareto_y_label_entry = ttk.Entry(self.pareto_input_frame, width=30)
         self.pareto_y_label_entry.pack(fill=tk.X, pady=2)
 
+        # Botón para generar el diagrama de Pareto
+        self.generate_pareto_chart_button = ttk.Button(self.pareto_input_frame, text="Generar Diagrama de Pareto", command=self.show_pareto_chart)
+        self.generate_pareto_chart_button.pack(pady=10)
+
+        # Inicialmente mostramos los campos de entrada manual
         ttk.Label(self.pareto_input_frame, text="Categorías (separadas por comas):").pack(anchor='w', pady=2)
         self.pareto_categories_entry.pack(fill=tk.X, pady=2)
-
         ttk.Label(self.pareto_input_frame, text="Valores (separados por comas):").pack(anchor='w', pady=2)
         self.pareto_values_entry.pack(fill=tk.X, pady=2)
 
-        self.generate_pareto_chart_button.pack(pady=10)
-
 
     def setup_control_chart_inputs(self):
-        # Campos de entrada para el gráfico de control
-        self.control_title_entry = ttk.Entry(self.control_input_frame, width=30)
-        self.control_x_label_entry = ttk.Entry(self.control_input_frame, width=30)
-        self.control_y_label_entry = ttk.Entry(self.control_input_frame, width=30)
+        # Añadir opción para seleccionar la fuente de datos
+        ttk.Label(self.control_input_frame, text="Fuente de Datos:").pack(anchor='w', pady=2)
+        self.control_data_source = ttk.Combobox(self.control_input_frame, values=["Entrada Manual", "Archivo CSV"], state="readonly")
+        self.control_data_source.current(0)
+        self.control_data_source.pack(fill=tk.X, pady=2)
+        self.control_data_source.bind("<<ComboboxSelected>>", self.toggle_control_data_entry)
+
+        # Campo de entrada para los datos
         self.control_data_entry = ttk.Entry(self.control_input_frame, width=30)
-        
-        # Botón para generar el gráfico de control
-        self.generate_control_chart_button = ttk.Button(self.control_input_frame, text="Generar Gráfico de Control", command=self.show_control_chart)
-        
-        # Etiquetas y campos de entrada
+
+        # Botón para cargar archivo CSV
+        self.control_load_csv_button = ttk.Button(self.control_input_frame, text="Cargar Archivo CSV", command=self.load_control_csv)
+
+        # Resto de los campos
         ttk.Label(self.control_input_frame, text="Título del Gráfico de Control:").pack(anchor='w', pady=2)
+        self.control_title_entry = ttk.Entry(self.control_input_frame, width=30)
         self.control_title_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.control_input_frame, text="Etiqueta del Eje X:").pack(anchor='w', pady=2)
+        self.control_x_label_entry = ttk.Entry(self.control_input_frame, width=30)
         self.control_x_label_entry.pack(fill=tk.X, pady=2)
 
         ttk.Label(self.control_input_frame, text="Etiqueta del Eje Y:").pack(anchor='w', pady=2)
+        self.control_y_label_entry = ttk.Entry(self.control_input_frame, width=30)
         self.control_y_label_entry.pack(fill=tk.X, pady=2)
 
+        # Botón para generar el gráfico de control
+        self.generate_control_chart_button = ttk.Button(self.control_input_frame, text="Generar Gráfico de Control", command=self.show_control_chart)
+        self.generate_control_chart_button.pack(pady=10)
+
+        # Inicialmente mostramos el campo de entrada manual
         ttk.Label(self.control_input_frame, text="Datos (separados por comas):").pack(anchor='w', pady=2)
         self.control_data_entry.pack(fill=tk.X, pady=2)
-
-        self.generate_control_chart_button.pack(pady=10)
 
 
     def setup_verification_sheet_inputs(self):
@@ -397,6 +456,7 @@ class App:
         self.generate_ishikawa_button.pack(pady=10)
 
 
+# Mostrar los inputs
     def show_histogram_inputs(self):
         self.hide_all_input_frames()
         if not self.hist_input_frame_visible:
@@ -479,6 +539,7 @@ class App:
             self.verification_frame_visible = False
 
 
+# Mostrar las gráficas
     def show_histogram(self):
         # Limpiar el lienzo anterior
         self.clear_canvas()
@@ -553,45 +614,59 @@ class App:
         title = self.bar_title_entry.get() or "Gráfico de Barras"
         x_label = self.bar_x_label_entry.get() or "Categorías"
         y_label = self.bar_y_label_entry.get() or "Valores"
-        categories_str = self.bar_categories_entry.get()
-        values_str = self.bar_values_entry.get()
 
-        if not categories_str or not values_str:
-            messagebox.showinfo("Información", "Por favor, ingrese las categorías y los valores.")
-            return
+        data_source = self.bar_data_source.get()
 
         try:
-            # Convertir las cadenas de entrada en listas de categorías y valores
-            categories = [x.strip() for x in categories_str.split(',')]
-            values = [float(x.strip()) for x in values_str.split(',')]
+            if data_source == "Entrada Manual":
+                categories_str = self.bar_categories_entry.get()
+                values_str = self.bar_values_entry.get()
 
-            if len(categories) != len(values):
-                raise ValueError("El número de categorías y valores no coincide.")
+                if not categories_str or not values_str:
+                    messagebox.showinfo("Información", "Por favor, ingrese las categorías y los valores.")
+                    return
+
+                categories = [x.strip() for x in categories_str.split(',')]
+                values = [float(x.strip()) for x in values_str.split(',')]
+
+                if len(categories) != len(values):
+                    raise ValueError("El número de categorías y valores no coincide.")
+
+            elif data_source == "Archivo CSV":
+                if hasattr(self, 'bar_csv_categories') and self.bar_csv_categories:
+                    categories = self.bar_csv_categories
+                    values = self.bar_csv_values
+                else:
+                    messagebox.showinfo("Información", "No se han cargado datos desde el archivo CSV.")
+                    return
+            else:
+                messagebox.showerror("Error", "Fuente de datos no reconocida.")
+                return
+
+            # Crear una nueva figura y ejes
+            self.fig = plt.Figure(figsize=(5, 4))
+            ax = self.fig.add_subplot(111)
+
+            # Crear el gráfico de barras
+            ax.bar(categories, values, color='skyblue')
+            ax.set_title(title)
+            ax.set_xlabel(x_label)
+            ax.set_ylabel(y_label)
+
+            # Añadir etiquetas encima de cada barra
+            for i, v in enumerate(values):
+                ax.text(i, v + 0.5, str(v), ha='center')
+
+            # Ajustar el layout
+            self.fig.tight_layout()
+
+            # Crear el nuevo lienzo y mostrarlo
+            self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+            self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            self.canvas.draw()
+
         except ValueError as e:
             messagebox.showerror("Error", f"Error en los datos ingresados: {e}")
-            return
-
-        # Crear una nueva figura y ejes
-        self.fig = plt.Figure(figsize=(5, 4))
-        ax = self.fig.add_subplot(111)
-
-        # Crear el gráfico de barras
-        ax.bar(categories, values, color='skyblue')
-        ax.set_title(title)
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(y_label)
-
-        # Añadir etiquetas encima de cada barra
-        for i, v in enumerate(values):
-            ax.text(i, v + 1, str(v), ha='center')
-
-        # Ajustar el layout
-        self.fig.tight_layout()
-
-        # Crear el nuevo lienzo y mostrarlo
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        self.canvas.draw()
 
 
     def show_pie_chart(self):
@@ -600,40 +675,54 @@ class App:
 
         # Obtener los valores de los campos de entrada
         title = self.pie_title_entry.get() or "Gráfico de Pastel"
-        labels_str = self.pie_labels_entry.get()
-        values_str = self.pie_values_entry.get()
 
-        if not labels_str or not values_str:
-            messagebox.showinfo("Información", "Por favor, ingrese las etiquetas y los valores.")
-            return
+        data_source = self.pie_data_source.get()
 
         try:
-            # Convertir las cadenas de entrada en listas de etiquetas y valores
-            labels = [x.strip() for x in labels_str.split(',')]
-            values = [float(x.strip()) for x in values_str.split(',')]
+            if data_source == "Entrada Manual":
+                labels_str = self.pie_labels_entry.get()
+                values_str = self.pie_values_entry.get()
 
-            if len(labels) != len(values):
-                raise ValueError("El número de etiquetas y valores no coincide.")
+                if not labels_str or not values_str:
+                    messagebox.showinfo("Información", "Por favor, ingrese las etiquetas y los valores.")
+                    return
+
+                labels = [x.strip() for x in labels_str.split(',')]
+                values = [float(x.strip()) for x in values_str.split(',')]
+
+                if len(labels) != len(values):
+                    raise ValueError("El número de etiquetas y valores no coincide.")
+
+            elif data_source == "Archivo CSV":
+                if hasattr(self, 'pie_csv_labels') and self.pie_csv_labels:
+                    labels = self.pie_csv_labels
+                    values = self.pie_csv_values
+                else:
+                    messagebox.showinfo("Información", "No se han cargado datos desde el archivo CSV.")
+                    return
+            else:
+                messagebox.showerror("Error", "Fuente de datos no reconocida.")
+                return
+
+            # Crear una nueva figura y ejes
+            self.fig = plt.Figure(figsize=(5, 4))
+            ax = self.fig.add_subplot(111)
+
+            # Crear el gráfico de pastel
+            ax.pie(values, labels=labels, autopct='%1.1f%%', startangle=90)
+            ax.axis('equal')  # Para asegurar que el gráfico sea circular
+            ax.set_title(title)
+
+            # Ajustar el layout
+            self.fig.tight_layout()
+
+            # Crear el nuevo lienzo y mostrarlo
+            self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+            self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            self.canvas.draw()
+
         except ValueError as e:
             messagebox.showerror("Error", f"Error en los datos ingresados: {e}")
-            return
-
-        # Crear una nueva figura y ejes
-        self.fig = plt.Figure(figsize=(5, 4))
-        ax = self.fig.add_subplot(111)
-
-        # Crear el gráfico de pastel
-        ax.pie(values, labels=labels, autopct='%1.1f%%', startangle=90)
-        ax.axis('equal')  # Para asegurar que el gráfico sea circular
-        ax.set_title(title)
-
-        # Ajustar el layout
-        self.fig.tight_layout()
-
-        # Crear el nuevo lienzo y mostrarlo
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        self.canvas.draw()
 
 
     def show_scatter_plot(self):
@@ -644,48 +733,62 @@ class App:
         title = self.scatter_title_entry.get() or "Diagrama de Dispersión"
         x_label = self.scatter_x_label_entry.get() or "Eje X"
         y_label = self.scatter_y_label_entry.get() or "Eje Y"
-        x_values_str = self.scatter_x_values_entry.get()
-        y_values_str = self.scatter_y_values_entry.get()
 
-        if not x_values_str or not y_values_str:
-            messagebox.showinfo("Información", "Por favor, ingrese los valores de X y Y.")
-            return
+        data_source = self.scatter_data_source.get()
 
         try:
-            # Convertir las cadenas de entrada en listas de números
-            x_values = [float(x.strip()) for x in x_values_str.split(',')]
-            y_values = [float(y.strip()) for y in y_values_str.split(',')]
+            if data_source == "Entrada Manual":
+                x_values_str = self.scatter_x_values_entry.get()
+                y_values_str = self.scatter_y_values_entry.get()
 
-            if len(x_values) != len(y_values):
-                raise ValueError("El número de valores de X y Y no coincide.")
+                if not x_values_str or not y_values_str:
+                    messagebox.showinfo("Información", "Por favor, ingrese los valores de X y Y.")
+                    return
+
+                x_values = [float(x.strip()) for x in x_values_str.split(',')]
+                y_values = [float(y.strip()) for y in y_values_str.split(',')]
+
+                if len(x_values) != len(y_values):
+                    raise ValueError("El número de valores de X y Y no coincide.")
+
+            elif data_source == "Archivo CSV":
+                if hasattr(self, 'scatter_csv_x_values') and self.scatter_csv_x_values:
+                    x_values = self.scatter_csv_x_values
+                    y_values = self.scatter_csv_y_values
+                else:
+                    messagebox.showinfo("Información", "No se han cargado datos desde el archivo CSV.")
+                    return
+            else:
+                messagebox.showerror("Error", "Fuente de datos no reconocida.")
+                return
+
+            # Crear una nueva figura y ejes
+            self.fig = plt.Figure(figsize=(5, 4))
+            ax = self.fig.add_subplot(111)
+
+            # Crear el diagrama de dispersión
+            ax.scatter(x_values, y_values, color='green', alpha=0.5)
+
+            # Calcular la línea de tendencia si hay suficientes datos
+            if len(x_values) > 1:
+                m, b = np.polyfit(x_values, y_values, 1)  # Ajuste lineal
+                ax.plot(x_values, m*np.array(x_values) + b, color='red', label="Línea de tendencia")
+
+            ax.set_title(title)
+            ax.set_xlabel(x_label)
+            ax.set_ylabel(y_label)
+            ax.legend()
+
+            # Ajustar el layout
+            self.fig.tight_layout()
+
+            # Crear el nuevo lienzo y mostrarlo
+            self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+            self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            self.canvas.draw()
+
         except ValueError as e:
             messagebox.showerror("Error", f"Error en los datos ingresados: {e}")
-            return
-
-        # Crear una nueva figura y ejes
-        self.fig = plt.Figure(figsize=(5, 4))
-        ax = self.fig.add_subplot(111)
-
-        # Crear el diagrama de dispersión
-        ax.scatter(x_values, y_values, color='green', alpha=0.5)
-
-        # Calcular la línea de tendencia si hay suficientes datos
-        if len(x_values) > 1:
-            m, b = np.polyfit(x_values, y_values, 1)  # Ajuste lineal
-            ax.plot(x_values, m*np.array(x_values) + b, color='red', label="Línea de tendencia")
-
-        ax.set_title(title)
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(y_label)
-        ax.legend()
-
-        # Ajustar el layout
-        self.fig.tight_layout()
-
-        # Crear el nuevo lienzo y mostrarlo
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        self.canvas.draw()
 
 
     def show_pareto_chart(self):
@@ -696,20 +799,34 @@ class App:
         title = self.pareto_title_entry.get() or "Diagrama de Pareto"
         x_label = self.pareto_x_label_entry.get() or "Categorías"
         y_label = self.pareto_y_label_entry.get() or "Frecuencia"
-        categories_str = self.pareto_categories_entry.get()
-        values_str = self.pareto_values_entry.get()
 
-        if not categories_str or not values_str:
-            messagebox.showinfo("Información", "Por favor, ingrese las categorías y los valores.")
-            return
+        data_source = self.pareto_data_source.get()
 
         try:
-            # Convertir las cadenas de entrada en listas de categorías y valores
-            categories = [x.strip() for x in categories_str.split(',')]
-            values = [float(x.strip()) for x in values_str.split(',')]
+            if data_source == "Entrada Manual":
+                categories_str = self.pareto_categories_entry.get()
+                values_str = self.pareto_values_entry.get()
 
-            if len(categories) != len(values):
-                raise ValueError("El número de categorías y valores no coincide.")
+                if not categories_str or not values_str:
+                    messagebox.showinfo("Información", "Por favor, ingrese las categorías y los valores.")
+                    return
+
+                categories = [x.strip() for x in categories_str.split(',')]
+                values = [float(x.strip()) for x in values_str.split(',')]
+
+                if len(categories) != len(values):
+                    raise ValueError("El número de categorías y valores no coincide.")
+
+            elif data_source == "Archivo CSV":
+                if hasattr(self, 'pareto_csv_categories') and self.pareto_csv_categories:
+                    categories = self.pareto_csv_categories
+                    values = self.pareto_csv_values
+                else:
+                    messagebox.showinfo("Información", "No se han cargado datos desde el archivo CSV.")
+                    return
+            else:
+                messagebox.showerror("Error", "Fuente de datos no reconocida.")
+                return
 
             # Ordenar los valores de mayor a menor
             sorted_indices = np.argsort(values)[::-1]
@@ -764,15 +881,25 @@ class App:
         title = self.control_title_entry.get() or "Gráfico de Control"
         x_label = self.control_x_label_entry.get() or "Índice"
         y_label = self.control_y_label_entry.get() or "Valor"
-        data_str = self.control_data_entry.get()
 
-        if not data_str:
-            messagebox.showinfo("Información", "Por favor, ingrese los datos para el gráfico de control.")
-            return
+        data_source = self.control_data_source.get()
 
         try:
-            # Convertir la cadena de entrada en una lista de números
-            data = [float(x.strip()) for x in data_str.split(',')]
+            if data_source == "Entrada Manual":
+                data_str = self.control_data_entry.get()
+                if not data_str:
+                    messagebox.showinfo("Información", "Por favor, ingrese los datos para el gráfico de control.")
+                    return
+                data = [float(x.strip()) for x in data_str.split(',')]
+            elif data_source == "Archivo CSV":
+                if hasattr(self, 'control_csv_data') and self.control_csv_data:
+                    data = self.control_csv_data
+                else:
+                    messagebox.showinfo("Información", "No se han cargado datos desde el archivo CSV.")
+                    return
+            else:
+                messagebox.showerror("Error", "Fuente de datos no reconocida.")
+                return
 
             # Calcular estadísticas
             mean = np.mean(data)
@@ -912,6 +1039,7 @@ class App:
         self.canvas.draw()
 
 
+    # Entradas adicionales
     def toggle_hist_data_entry(self, event):
         if self.hist_data_source.get() == "Entrada Manual":
             # Mostrar campo de entrada de datos y ocultar botón de cargar CSV
@@ -923,6 +1051,79 @@ class App:
             self.load_csv_button.pack(fill=tk.X, pady=2)
 
 
+    def toggle_bar_data_entry(self, event):
+        if self.bar_data_source.get() == "Entrada Manual":
+            # Mostrar campos de entrada manual y ocultar botón de cargar CSV
+            ttk.Label(self.bar_input_frame, text="Categorías (separadas por comas):").pack(anchor='w', pady=2)
+            self.bar_categories_entry.pack(fill=tk.X, pady=2)
+            ttk.Label(self.bar_input_frame, text="Valores (separados por comas):").pack(anchor='w', pady=2)
+            self.bar_values_entry.pack(fill=tk.X, pady=2)
+            self.bar_load_csv_button.pack_forget()
+        else:
+            # Mostrar botón de cargar CSV y ocultar campos de entrada manual
+            self.bar_categories_entry.pack_forget()
+            self.bar_values_entry.pack_forget()
+            self.bar_load_csv_button.pack(fill=tk.X, pady=2)
+
+
+    def toggle_pie_data_entry(self, event):
+        if self.pie_data_source.get() == "Entrada Manual":
+            # Mostrar campos de entrada manual y ocultar botón de cargar CSV
+            ttk.Label(self.pie_input_frame, text="Etiquetas (separadas por comas):").pack(anchor='w', pady=2)
+            self.pie_labels_entry.pack(fill=tk.X, pady=2)
+            ttk.Label(self.pie_input_frame, text="Valores (separados por comas):").pack(anchor='w', pady=2)
+            self.pie_values_entry.pack(fill=tk.X, pady=2)
+            self.pie_load_csv_button.pack_forget()
+        else:
+            # Mostrar botón de cargar CSV y ocultar campos de entrada manual
+            self.pie_labels_entry.pack_forget()
+            self.pie_values_entry.pack_forget()
+            self.pie_load_csv_button.pack(fill=tk.X, pady=2)
+
+
+    def toggle_scatter_data_entry(self, event):
+        if self.scatter_data_source.get() == "Entrada Manual":
+            # Mostrar campos de entrada manual y ocultar botón de cargar CSV
+            ttk.Label(self.scatter_input_frame, text="Valores de X (separados por comas):").pack(anchor='w', pady=2)
+            self.scatter_x_values_entry.pack(fill=tk.X, pady=2)
+            ttk.Label(self.scatter_input_frame, text="Valores de Y (separados por comas):").pack(anchor='w', pady=2)
+            self.scatter_y_values_entry.pack(fill=tk.X, pady=2)
+            self.scatter_load_csv_button.pack_forget()
+        else:
+            # Mostrar botón de cargar CSV y ocultar campos de entrada manual
+            self.scatter_x_values_entry.pack_forget()
+            self.scatter_y_values_entry.pack_forget()
+            self.scatter_load_csv_button.pack(fill=tk.X, pady=2)
+
+
+    def toggle_pareto_data_entry(self, event):
+        if self.pareto_data_source.get() == "Entrada Manual":
+            # Mostrar campos de entrada manual y ocultar botón de cargar CSV
+            ttk.Label(self.pareto_input_frame, text="Categorías (separadas por comas):").pack(anchor='w', pady=2)
+            self.pareto_categories_entry.pack(fill=tk.X, pady=2)
+            ttk.Label(self.pareto_input_frame, text="Valores (separados por comas):").pack(anchor='w', pady=2)
+            self.pareto_values_entry.pack(fill=tk.X, pady=2)
+            self.pareto_load_csv_button.pack_forget()
+        else:
+            # Mostrar botón de cargar CSV y ocultar campos de entrada manual
+            self.pareto_categories_entry.pack_forget()
+            self.pareto_values_entry.pack_forget()
+            self.pareto_load_csv_button.pack(fill=tk.X, pady=2)
+
+
+    def toggle_control_data_entry(self, event):
+        if self.control_data_source.get() == "Entrada Manual":
+            # Mostrar campo de entrada manual y ocultar botón de cargar CSV
+            ttk.Label(self.control_input_frame, text="Datos (separados por comas):").pack(anchor='w', pady=2)
+            self.control_data_entry.pack(fill=tk.X, pady=2)
+            self.control_load_csv_button.pack_forget()
+        else:
+            # Mostrar botón de cargar CSV y ocultar campo de entrada manual
+            self.control_data_entry.pack_forget()
+            self.control_load_csv_button.pack(fill=tk.X, pady=2)
+
+
+    # Poner el csv
     def load_hist_csv(self):
         # Abrir cuadro de diálogo para seleccionar el archivo CSV
         file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
@@ -952,6 +1153,185 @@ class App:
         else:
             self.hist_csv_data = None
 
+
+    def load_bar_csv(self):
+        # Abrir cuadro de diálogo para seleccionar el archivo CSV
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            try:
+                # Leer los datos del archivo CSV
+                import csv
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    categories = []
+                    values = []
+                    for row in reader:
+                        if len(row) >= 2:
+                            category = row[0].strip()
+                            try:
+                                value = float(row[1].strip())
+                                categories.append(category)
+                                values.append(value)
+                            except ValueError:
+                                continue  # Ignorar filas con valores no numéricos
+                if categories and values:
+                    self.bar_csv_categories = categories
+                    self.bar_csv_values = values
+                    messagebox.showinfo("Información", f"Se cargaron {len(categories)} categorías desde el archivo CSV.")
+                else:
+                    messagebox.showwarning("Advertencia", "No se encontraron datos válidos en el archivo CSV.")
+                    self.bar_csv_categories = None
+                    self.bar_csv_values = None
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el archivo CSV: {e}")
+                self.bar_csv_categories = None
+                self.bar_csv_values = None
+        else:
+            self.bar_csv_categories = None
+            self.bar_csv_values = None
+
+
+    def load_pie_csv(self):
+        # Abrir cuadro de diálogo para seleccionar el archivo CSV
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            try:
+                # Leer los datos del archivo CSV
+                import csv
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    labels = []
+                    values = []
+                    for row in reader:
+                        if len(row) >= 2:
+                            label = row[0].strip()
+                            try:
+                                value = float(row[1].strip())
+                                labels.append(label)
+                                values.append(value)
+                            except ValueError:
+                                continue  # Ignorar filas con valores no numéricos
+                if labels and values:
+                    self.pie_csv_labels = labels
+                    self.pie_csv_values = values
+                    messagebox.showinfo("Información", f"Se cargaron {len(labels)} etiquetas desde el archivo CSV.")
+                else:
+                    messagebox.showwarning("Advertencia", "No se encontraron datos válidos en el archivo CSV.")
+                    self.pie_csv_labels = None
+                    self.pie_csv_values = None
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el archivo CSV: {e}")
+                self.pie_csv_labels = None
+                self.pie_csv_values = None
+        else:
+            self.pie_csv_labels = None
+            self.pie_csv_values = None
+
+
+    def load_scatter_csv(self):
+        # Abrir cuadro de diálogo para seleccionar el archivo CSV
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            try:
+                # Leer los datos del archivo CSV
+                import csv
+                x_values = []
+                y_values = []
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for row in reader:
+                        if len(row) >= 2:
+                            try:
+                                x = float(row[0].strip())
+                                y = float(row[1].strip())
+                                x_values.append(x)
+                                y_values.append(y)
+                            except ValueError:
+                                continue  # Ignorar filas con valores no numéricos
+                if x_values and y_values:
+                    self.scatter_csv_x_values = x_values
+                    self.scatter_csv_y_values = y_values
+                    messagebox.showinfo("Información", f"Se cargaron {len(x_values)} puntos desde el archivo CSV.")
+                else:
+                    messagebox.showwarning("Advertencia", "No se encontraron datos válidos en el archivo CSV.")
+                    self.scatter_csv_x_values = None
+                    self.scatter_csv_y_values = None
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el archivo CSV: {e}")
+                self.scatter_csv_x_values = None
+                self.scatter_csv_y_values = None
+        else:
+            self.scatter_csv_x_values = None
+            self.scatter_csv_y_values = None
+
+
+    def load_pareto_csv(self):
+        # Abrir cuadro de diálogo para seleccionar el archivo CSV
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            try:
+                # Leer los datos del archivo CSV
+                import csv
+                categories = []
+                values = []
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for row in reader:
+                        if len(row) >= 2:
+                            category = row[0].strip()
+                            try:
+                                value = float(row[1].strip())
+                                categories.append(category)
+                                values.append(value)
+                            except ValueError:
+                                continue  # Ignorar filas con valores no numéricos
+                if categories and values:
+                    self.pareto_csv_categories = categories
+                    self.pareto_csv_values = values
+                    messagebox.showinfo("Información", f"Se cargaron {len(categories)} categorías desde el archivo CSV.")
+                else:
+                    messagebox.showwarning("Advertencia", "No se encontraron datos válidos en el archivo CSV.")
+                    self.pareto_csv_categories = None
+                    self.pareto_csv_values = None
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el archivo CSV: {e}")
+                self.pareto_csv_categories = None
+                self.pareto_csv_values = None
+        else:
+            self.pareto_csv_categories = None
+            self.pareto_csv_values = None
+
+
+    def load_control_csv(self):
+        # Abrir cuadro de diálogo para seleccionar el archivo CSV
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            try:
+                # Leer los datos del archivo CSV
+                import csv
+                data = []
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for row in reader:
+                        for value in row:
+                            try:
+                                data.append(float(value.strip()))
+                            except ValueError:
+                                continue  # Ignorar valores no numéricos
+                if data:
+                    self.control_csv_data = data
+                    messagebox.showinfo("Información", f"Se cargaron {len(data)} datos desde el archivo CSV.")
+                else:
+                    messagebox.showwarning("Advertencia", "No se encontraron datos numéricos en el archivo CSV.")
+                    self.control_csv_data = None
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el archivo CSV: {e}")
+                self.control_csv_data = None
+        else:
+            self.control_csv_data = None
+
+
+    #########
 
     def add_cause_entry(self):
         # Crear un nuevo frame para la causa y sus subcausas
